@@ -1,3 +1,16 @@
+#root {
+  background-color: var(--dark-blue);
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  --light-blue: #6077C0;
+  --dark-blue: #455073;
+  --brown: #C0904D;
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -10,4 +23,127 @@ body {
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5 {
+  margin: 0;
+}
+
+/*-------------------------------- Clock Container -----------------------------------*/
+.clock-container {
+  display: flex;
+  width: 60%;
+  height: 50%;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  gap: 30px;
+  border-radius: 18px;
+  color: whitesmoke;
+  font-weight: 550;
+  background-color: var(--dark-blue);
+}
+
+.clock-title {
+  margin-top: 100px;
+  display: inherit;
+  justify-content: center;
+  flex: 1 0 auto;
+  font-size: 50px;
+  font-weight: 900;
+  width: 100%;
+  color: var(--brown);
+}
+
+/*-------------------------------- Middle Controls -----------------------------------*/
+.timer-controls-container {
+  display: inherit;
+  gap: 50px;
+  flex: 1 0 auto;
+  font-size: 30px;
+}
+
+.time-control {
+  display: inherit;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+}
+
+.button-control {
+  display: inherit;
+  justify-content: center;
+  align-items: center;
+  flex-direction: row;
+  width: 100%;
+}
+
+.button-control button {
+  appearance: none;
+  border: none;
+  background-color: var(--dark-blue);
+}
+
+.button-control .material-symbols-outlined {
+  line-height: unset;
+  font-size: 45px;
+  cursor: pointer;
+  transition: all 0.5s;
+  color: whitesmoke;
+}
+
+.button-control .material-symbols-outlined:hover {
+  color: var(--light-blue);
+  transition: 0.5s;
+}
+
+/*-------------------------------- Bottom Controls -----------------------------------*/
+.clock-countdown {
+  display: inherit;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  gap: 15px;
+}
+
+#timer-label {
+  display: inherit;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  gap: 15px;
+  border: 4px solid var(--light-blue);
+  border-radius: 8px;
+}
+
+#timer-label h1 {
+ color: var(--brown);
+}
+
+.clock-countdown-buttons button {
+  appearance: none;
+  border: none;
+  background-color: var(--dark-blue);
+  margin-bottom: 100px;
+}
+
+
+.clock-countdown-buttons .material-symbols-outlined {
+  line-height: unset;
+  font-size: 45px;
+  cursor: pointer;
+  transition: all 0.5s;
+  color: whitesmoke;
+}
+
+.clock-countdown-buttons .material-symbols-outlined:hover {
+  color: var(--light-blue);
+  transition: 0.5s;
 }
