@@ -127,6 +127,10 @@ h5 {
  color: var(--brown);
 }
 
+#time-left span {
+  font-size: 35px;
+}
+
 .clock-countdown-buttons button {
   appearance: none;
   border: none;
