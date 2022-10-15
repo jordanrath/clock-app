@@ -1,6 +1,5 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-//samepage components for the sake of codepen
 const TimerControl = ({ titleId, titleClassName, titleText, incrementId, decrementId, lengthId, length, addOnClick, subtractOnClick }) => {
     return (
       <div className="time-control">
@@ -24,113 +23,150 @@ const TimerControl = ({ titleId, titleClassName, titleText, incrementId, decreme
     )
 }
 
-
 const STATUS = {
-  started: "Started",
-  stopped: "Stopped"
+  start: "Start",
+  stop: "Stop"
 };
 
 const CLOCKPHASES = {
-  break: "break",
-  session: "session"
+  break: "Break",
+  session: "Session"
 };
 
 const initialTime = 1500;
 
+const useInterval= (callback, tickCadence) => {
+  const savedCallback = useRef();
+
+  useEffect(() => {
+    savedCallback.current = callback;
+  }, [callback]);
+
+useEffect(() => {
+  const clockTick = () => {
+    savedCallback.current();
+  }
+  if (tickCadence !== null) {
+    let intervalId = setInterval(clockTick, tickCadence);
+    return () => clearInterval(intervalId);
+  }
+}, [tickCadence]);
+}
+
+const twoDigits = (num) => String(num).padStart(2, "0");
+
 const App = () => {
   const [secondsRemaining, setSecondsRemaining] = useState(initialTime);
-  const [status, setStatus] = useState(STATUS.stopped)
+  const [status, setStatus] = useState(STATUS.stop)
   const [breakTime, setBreakTime] = useState(5);
   const [sessionTime, setSessionTime] = useState(25);
   const [clockPhase, setClockPhase] = useState(CLOCKPHASES.session);
 
-    //try useMemo on these 3 consts --- in separate useMemos
-  const secondsToDisplay = secondsRemaining % 60;
-  const minutesRemaining = (secondsRemaining - secondsToDisplay) / 60;
-  const minutesToDisplay = minutesRemaining % 61;
+  const secondsToDisplay = useMemo(() => secondsRemaining % 60, [secondsRemaining]);
+  const minutesRemaining = useMemo(() => (secondsRemaining - secondsToDisplay) / 60, [secondsRemaining, secondsToDisplay]);
+  const minutesToDisplay = useMemo(() => minutesRemaining % 61, [minutesRemaining]);
 
+  const playSound = () => {
+    const alarmSound = document.getElementById('beep');
+    alarmSound.play();
+  }
 
   const handleStart = () => {
-    if (status === STATUS.stopped) {
-      setStatus(STATUS.started);
+    if (status === STATUS.stop) {
+      setStatus(STATUS.start);
       if (minutesRemaining === 0 && secondsRemaining === 0) {
         setClockPhase(CLOCKPHASES.session);
         setSecondsRemaining(sessionTime * 60);
       }
+    } else {
+      setStatus(STATUS.stop);
     } 
-    if (status !== STATUS.stopped) {
-      setStatus(STATUS.stopped);
-    }
   };
 
-  //make handle functions into useCallback hooks --- all of them in separate useCallbacks... makes them not get rebuilt every update
   const handleStop = useCallback(() => {
-    setStatus(STATUS.stopped);
+    setStatus(STATUS.stop);
   }, [setStatus]);
 
-  const handleReset = () => {
-    setStatus(STATUS.stopped);
+  const handleReset = useCallback(() => {
+    setStatus(STATUS.stop);
     setBreakTime(5);
     setSessionTime(25);
     setSecondsRemaining(initialTime);
     setClockPhase(CLOCKPHASES.session);
-  };
+    
+    const alarmSound = document.getElementById('beep');
+    alarmSound.pause();
+    alarmSound.currentTime = 0;
+  }, [
+    setStatus, 
+    setBreakTime, 
+    setSessionTime, 
+    setSecondsRemaining, 
+    setClockPhase,
+  ]);
 
   useInterval(() => {
-    if (secondsRemaining >= 0) {
+    if (secondsRemaining > 0) {
       setSecondsRemaining(secondsRemaining - 1);
-    } else {
-      setStatus(STATUS.stopped);
-    }
-  },
-    status === STATUS.started ? 100 : null
-  )
-
-  //all of these in useCallbacks
-  const addSessionUpdate = () => {
-    console.log(status)
-    // setStatus(STATUS.stopped)
-    if (status === 'Stopped' && sessionTime <= 59) {
-      setSecondsRemaining(secondsRemaining + 60);
-      console.log(secondsRemaining)
-      setSessionTime(sessionTime + 1);
-    }
-    if (status === 'Started') {
-      setSecondsRemaining(secondsRemaining);
-      setSessionTime(sessionTime + 0);
-    }
-  }
-
-  const subtractSessionUpdate = () => {
-    if (status === 'Stopped' && secondsRemaining > 0 && sessionTime > 1) {
-      setSecondsRemaining(secondsRemaining - 60);
-      setSessionTime(sessionTime - 1)
-    }
-    if (status === 'Started') {
-      setSecondsRemaining(secondsRemaining);
-      setSessionTime(sessionTime + 0);
-    }
-  }
-
-  const addBreakUpdate = () => {
-    breakTime <= 59 ? setBreakTime(breakTime + 1) : setBreakTime(60)    
-  }
-
-  const subtractBreakUpdate = () => {
-    breakTime > 1 ? setBreakTime(breakTime - 1) : setBreakTime(1);
-  }
-
-  useEffect(() => {
-    console.log(clockPhase)
-    if (secondsRemaining === 0 && minutesRemaining === 0) {
+    } else if (secondsRemaining === 0 && minutesRemaining === 0) {
+      playSound();
       if (clockPhase === CLOCKPHASES.break) {
-        setStatus(STATUS.stopped)
+        setClockPhase(CLOCKPHASES.session);
+        setSecondsRemaining(sessionTime * 60);
       } else {
         setSecondsRemaining(breakTime * 60);
         setClockPhase(CLOCKPHASES.break);
       }
     }
-  }, [secondsRemaining, minutesRemaining, setStatus, clockPhase, setSecondsRemaining, breakTime]);
+  },
+    status === STATUS.start ? 1000  : null
+  );
+
+  const addSessionUpdate = useCallback(() => {
+    if (status === STATUS.stop && sessionTime <= 59) {
+      setSecondsRemaining(secondsRemaining + 60);  
+      setSessionTime(sessionTime + 1);
+    }
+    if (status === STATUS.start) {
+      setSecondsRemaining(secondsRemaining);
+      setSessionTime(sessionTime + 0);
+    }
+  }, [
+    setSecondsRemaining, 
+    setSessionTime, 
+    sessionTime, 
+    secondsRemaining, 
+    status
+  ]);
+
+  const subtractSessionUpdate = useCallback(() => {
+    if (status === STATUS.stop && secondsRemaining > 0 && sessionTime > 1) {
+      const newSecondsRemaining = secondsRemaining - 60;
+      const newSessionTime = sessionTime - 1;
+      setSecondsRemaining(newSecondsRemaining);
+      setSessionTime(newSessionTime);
+    }
+  }, [
+    setSecondsRemaining, 
+    setSessionTime, 
+    secondsRemaining, 
+    sessionTime, 
+    status
+  ]);
+
+  const addBreakUpdate = useCallback(() => {
+    breakTime <= 59 ? setBreakTime(breakTime + 1) : setBreakTime(60);   
+  }, [
+    breakTime, 
+    setBreakTime
+  ]);
+
+  const subtractBreakUpdate = useCallback(() => {
+    breakTime > 1 ? setBreakTime(breakTime - 1) : setBreakTime(1);
+  }, [
+    breakTime, 
+    setBreakTime
+  ]);
 
   return (
     <div className="clock-container">
@@ -160,57 +196,16 @@ const App = () => {
         />
         </div>
         <div className="clock-countdown">
-          <div id='timer-label'>
-            <h1>Current Session</h1>
+          <div className="timer-container">
+            <h1 id='timer-label'>{clockPhase}</h1>
             <div id='time-left'>       
-              {/* {(minutesToDisplay > 0 || secondsToDisplay >= 0) ? (
-                <span>
-                  {twoDigits(minutesToDisplay)}:{twoDigits(secondsToDisplay)}
-                </span>
-              ) : (
-                <span>
-                  {twoDigits(setSecondsRemaining(breakTime * 60))}
-                </span>
-              )} */}
               <span>
                   {twoDigits(minutesToDisplay)}:{twoDigits(secondsToDisplay)}
               </span>
-
-              {/* {(twoDigits(minutesToDisplay) > 0 || twoDigits(secondsToDisplay) >= 0) ? (
-                <span>
-                  {twoDigits(minutesToDisplay)}:{twoDigits(secondsToDisplay)}
-                </span>
-              ) : (
-              (twoDigits(minutesToDisplay) >= 0 || twoDigits(secondsToDisplay) >= 0) ? (
-                <span>
-                  {twoDigits(setSecondsRemaining(breakTime * 60))}
-                </span>
-              ) : (
-                <span>
-                  00:00
-                </span>
-              )
-              )} */}
-
-              {/* {(twoDigits(minutesToDisplay) >= 0 || twoDigits(secondsToDisplay) >= 0) ? (
-                <span>
-                  {twoDigits(minutesToDisplay)}:{twoDigits(secondsToDisplay)}
-                </span>
-              ) : (
-                (twoDigits(minutesToDisplay) === 0 || twoDigits(secondsToDisplay) === 0)
-              ) ? (
-                <span>
-                  {twoDigits(setSecondsRemaining(breakTime * 60))}
-                </span>
-                ) : (
-                  <span>
-                    {twoDigits(minutesToDisplay)}:{twoDigits(secondsToDisplay)}
-                  </span>
-              )} */}
             </div>
           </div>
-          <div id='start_stop' className="clock-countdown-buttons">
-            <button id='start' onClick={handleStart}>
+          <div id='buttons' className="clock-countdown-buttons">
+            <button id='start_stop' onClick={handleStart}>
               <span className="material-symbols-outlined">
                 play_arrow
               </span>
@@ -226,29 +221,14 @@ const App = () => {
               </span>
             </button>
           </div>
-        </div>  
+        </div>
+        <audio 
+            id='beep'
+            preload="auto"
+            src="https://raw.githubusercontent.com/freeCodeCamp/cdn/master/build/testable-projects-fcc/audio/BeepSound.wav"
+          />
     </div>
   );
 }
-
-const useInterval= (callback, delay) => {
-  const savedCallback = useRef();
-
-  useEffect(() => {
-    savedCallback.current = callback;
-  }, [callback]);
-
-useEffect(() => {
-  const tick = () => {
-    savedCallback.current();
-  }
-  if (delay !== null) {
-    let id = setInterval(tick, delay);
-    return () => clearInterval(id);
-  }
-}, [delay]);
-}
-
-const twoDigits = (num) => String(num).padStart(2, "0");
 
 export default App;
