@@ -153,3 +153,57 @@ h5 {
   color: var(--light-blue);
   transition: 0.5s;
 }
+
+@media only screen and (max-width:720px) {
+  .clock-container {
+    width: 90%;
+  }
+
+  .clock-title {
+    font-size: 40px;
+  }
+  
+  .timer-controls-container {
+    font-size: 20px;
+  }
+
+  #timer-label {
+    font-size: 30px;
+   }
+   
+   #time-left span {
+     font-size: 25px;
+   }
+   
+   .clock-countdown-buttons .material-symbols-outlined {
+     font-size: 35px;
+   }
+}
+
+@media only screen and (max-width:400px) {
+  .clock-container {
+    width: 90%;
+    height: unset;
+  }
+
+  .clock-title {
+    font-size: 30px;
+  }
+  
+  .timer-controls-container {
+    font-size: 15px;
+    gap: 25px;
+  }
+
+  #timer-label {
+    font-size: 20px;
+   }
+   
+   #time-left span {
+     font-size: 15px;
+   }
+   
+   .clock-countdown-buttons .material-symbols-outlined {
+     font-size: 25px;
+   }
+}
